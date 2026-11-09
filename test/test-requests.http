@@ -10,17 +10,46 @@ GET {{apiUrl}}/cats/8
 ### GET cat by ID (FAIL: not found)
 GET {{apiUrl}}/cats/98
 
+# cat_name, weight, owner, filename, birthdate
+
 ### POST new cat
 POST {{apiUrl}}/cats
 Content-Type: application/json
 
 {
-    "name": "Rolle",
+    "cat_name": "Rolle",
     "birthdate": "2022-10-10",
     "weight": 4,
     "owner": "Tiina",
-    "image": "https://placecats.com/310/240"
+    "filename": "https://placecats.com/310/240"
 }
+
+### POST cat with IMAGE
+POST http://127.0.0.1:3000/api/v1/cats HTTP/1.1
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="cat_name"
+
+Misu
+--MyBoundary
+Content-Disposition: form-data; name="weight"
+
+6
+--MyBoundary
+Content-Disposition: form-data; name="owner"
+
+3602
+--MyBoundary
+Content-Disposition: form-data; name="birthdate"
+
+2023-10-08
+--MyBoundary
+Content-Disposition: form-data; name="image"; filename="dog.jpg"
+Content-Type: image/jpeg
+
+< ./dog.png
+--MyBoundary--
 
 ### PUT existing cat
 PUT {{apiUrl}}/cats/8
