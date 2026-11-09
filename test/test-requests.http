@@ -1,0 +1,19 @@
+# Test Requests for Cat API
+
+### GET cats
+GET http://127.0.0.1:3000/api/v1/cats
+
+### GET cat by ID
+GET http://127.0.0.1:3000/api/v1/cats/1
+
+### POST new cat
+POST http://127.0.0.1:3000/api/v1/cats
+Content-Type: application/json
+
+{
+    "name": "Rolle",
+    "birthdate": "2022-10-10",
+    "weight": 4,
+    "owner": "Tiina",
+    "image": "https://placecats.com/310/240"
+}
