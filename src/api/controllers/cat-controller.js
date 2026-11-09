@@ -7,7 +7,14 @@ import {
 } from '../models/cat-model.js';
 
 const getAllCats = (req, res) => {
-  res.json(listAllCats());
+  // res.json(listAllCats());
+  const cats = listAllCats();
+  // esimerkki siitä että middleware on muokannut req-objektia
+  res.json({
+    message: 'Kissat haettu onnistuneesti ja aikaleima on lisätty',
+    time: req.requestTime,
+    data: cats,
+  });
 };
 
 const getCatById = (req, res) => {
@@ -28,8 +35,19 @@ const getCatById = (req, res) => {
 
 const postCat = (req, res) => {
   console.log('request', req.body);
-  const id = addCat(req.body);
-  res.status(201).json({cat_id: id});
+  // const id = addCat(req.body);
+  // res.status(201).json({cat_id: id});
+  console.log(req.file);
+  console.log(req.file.filename);
+  req.body.filename = req.file.filename;
+
+  const result = addCat(req.body);
+  if (result) {
+    res.status(201);
+    res.json({message: 'Cat added!', result});
+  } else {
+    res.sendStatus(400);
+  }
 };
 
 const deleteCat = (req, res) => {
