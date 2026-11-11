@@ -45,8 +45,8 @@ Content-Disposition: form-data; name="birthdate"
 
 2023-10-08
 --MyBoundary
-Content-Disposition: form-data; name="image"; filename="dog.jpg"
-Content-Type: image/jpeg
+Content-Disposition: form-data; name="image"; filename="dog.png"
+Content-Type: image/png
 
 < ./dog.png
 --MyBoundary--
