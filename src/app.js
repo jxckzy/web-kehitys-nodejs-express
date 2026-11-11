@@ -1,10 +1,13 @@
 import express from 'express';
 import router from './api/index.js';
+import cors from 'cors';
 const hostname = '127.0.0.1';
 const port = 3000;
 const app = express();
 
 import requestTime from './api/middlewares/request-time.js';
+
+app.use(cors());
 
 app.use(express.static('public'));
 // app.use('/images', express.static('public'));

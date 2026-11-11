@@ -1,0 +1,68 @@
+@apiUrl = http://127.0.0.1:3000/api/v1
+@userId = {{registerUser.response.body.$.result.user_id}}
+@token = {{loginUser.response.body.$.token}}
+
+### Register a regular user (execute once; repeated usernames are rejected)
+# @name registerUser
+POST {{apiUrl}}/users
+Content-Type: application/json
+
+{
+    "name": "Authorization Test",
+    "username": "auth-test-user",
+    "email": "auth-test@example.com",
+    "password": "test-password",
+    "role": "admin"
+}
+
+### Log in as the registered regular user
+# @name loginUser
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "auth-test-user",
+    "password": "test-password"
+}
+
+### Missing token should return 401
+GET {{apiUrl}}/cats
+
+### Read own user record
+GET {{apiUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### Update own user record
+PUT {{apiUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Authorization Test Updated"
+}
+
+### Access another user's record should return 403 (seeded admin user ID is 1)
+GET {{apiUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Update another user's record should return 403
+PUT {{apiUrl}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Unauthorized Update"
+}
+
+### Delete another user's cat should return 403 (seeded cat ID 41 belongs to user 37)
+DELETE {{apiUrl}}/cats/41
+Authorization: Bearer {{token}}
+
+### Update another user's cat should return 403
+PUT {{apiUrl}}/cats/41
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "cat_name": "Unauthorized Update"
+}
