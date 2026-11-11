@@ -6,23 +6,28 @@ import {
   postCat,
   putCat,
 } from '../controllers/cat-controller.js';
-import logger from '../middlewares/logger.js';
 
 // Multer and sharp middleware for handling file uploads
 import multer from 'multer';
 import {createThumbnail} from '../middlewares/upload.js';
+import {authenticateToken} from '../middlewares/authentication.js';
 const upload = multer({dest: 'uploads/'});
 
 const catRouter = express.Router();
+catRouter.use(authenticateToken);
 
 // Kaikki /api/v1/cats reitit
 catRouter
   .route('/')
-  .get(logger, getAllCats)
+  .get(getAllCats)
   .post(upload.single('image'), createThumbnail, postCat);
 
 // Kaikki /api/v1/cats/:id reitit
-catRouter.route('/:id').get(getCatById).delete(deleteCat).put(putCat);
+catRouter
+  .route('/:id')
+  .get(getCatById)
+  .delete(deleteCat)
+  .put(putCat);
 
 export default catRouter;
 

@@ -48,29 +48,47 @@ const addCat = async (cat) => {
   return {cat_id: result.insertId};
 };
 
-const removeCat = async (id) => {
-  const [rows] = await promisepool.execute(
-    'DELETE FROM wsk_cats WHERE cat_id = ?',
-    [id]
-  );
-  console.log('rows', rows);
-  if (rows.affectedRows === 0) {
-    return false;
-  }
-  return {message: 'success'};
+const removeCat = async (id, user) => {
+  const isAdmin = user.role === 'admin';
+  const sql = isAdmin
+    ? 'DELETE FROM wsk_cats WHERE cat_id = ?'
+    : 'DELETE FROM wsk_cats WHERE cat_id = ? AND owner = ?';
+  const params = isAdmin ? [id] : [id, user.user_id];
+  const [result] = await promisepool.execute(sql, params);
+  return result.affectedRows > 0;
 };
 
-const modifyCat = async (cat, id) => {
-  const sql = promisepool.format(`UPDATE wsk_cats SET ? WHERE cat_id = ?`, [
-    cat,
-    id,
-  ]);
-  const rows = await promisepool.execute(sql);
-  console.log('rows', rows);
-  if (rows[0].affectedRows === 0) {
+const modifyCat = async (cat, id, user) => {
+  const allowedFields =
+    user.role === 'admin'
+      ? ['cat_name', 'weight', 'owner', 'filename', 'birthdate']
+      : ['cat_name', 'weight', 'filename', 'birthdate'];
+  const fields = Object.keys(cat).filter((field) => allowedFields.includes(field));
+  if (fields.length === 0) {
     return false;
   }
-  return true;
+
+  const assignments = fields.map((field) => `\`${field}\` = ?`).join(', ');
+  const values = fields.map((field) => cat[field]);
+  const isAdmin = user.role === 'admin';
+  const sql = isAdmin
+    ? `UPDATE wsk_cats SET ${assignments} WHERE cat_id = ?`
+    : `UPDATE wsk_cats SET ${assignments} WHERE cat_id = ? AND owner = ?`;
+  const params = isAdmin
+    ? [...values, id]
+    : [...values, id, user.user_id];
+  const [result] = await promisepool.execute(sql, params);
+  if (result.affectedRows > 0) {
+    return true;
+  }
+
+  const [rows] = isAdmin
+    ? await promisepool.execute('SELECT cat_id FROM wsk_cats WHERE cat_id = ?', [id])
+    : await promisepool.execute(
+        'SELECT cat_id FROM wsk_cats WHERE cat_id = ? AND owner = ?',
+        [id, user.user_id]
+      );
+  return rows.length > 0;
 };
 
 export {

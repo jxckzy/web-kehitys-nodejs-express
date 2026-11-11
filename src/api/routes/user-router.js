@@ -7,10 +7,13 @@ import {
   putUser,
 } from '../controllers/user-controller.js';
 import {getCatsByUserId} from '../controllers/cat-controller.js';
+import {authenticateToken} from '../middlewares/authentication.js';
 
 const userRouter = express.Router();
 
-userRouter.route('/').get(getAllUsers).post(postUser);
+userRouter.post('/', postUser);
+userRouter.use(authenticateToken);
+userRouter.get('/', getAllUsers);
 userRouter.get('/:id/cats', getCatsByUserId);
 userRouter.route('/:id').get(getUserById).put(putUser).delete(deleteUser);
 

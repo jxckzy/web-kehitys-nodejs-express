@@ -7,7 +7,6 @@ const createThumbnail = async (req, res, next) => {
     return;
   }
   console.log(req.file.path);
-  // TODO: use file path to create 160x160 png thumbnail with sharp
   try {
     const thumbnailFilename = `${req.file.filename}_thumb.png`;
     const thumbnailPath = path.join(req.file.destination, thumbnailFilename);

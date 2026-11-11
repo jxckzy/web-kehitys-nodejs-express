@@ -32,6 +32,10 @@ const getCatById = async (req, res) => {
 };
 
 const getCatsByUserId = async (req, res) => {
+  const user = res.locals.user;
+  if (user.role !== 'admin' && Number(req.params.id) !== Number(user.user_id)) {
+    return res.status(403).json({message: 'You can only view your own cats'});
+  }
   const cats = await findCatByUserId(req.params.id);
   res.json(cats);
 };
@@ -43,6 +47,7 @@ const postCat = async (req, res) => {
   console.log(req.file);
   console.log(req.file.filename);
   req.body.filename = req.file.filename;
+  req.body.owner = res.locals.user.user_id;
 
   const result = await addCat(req.body);
   if (result) {
@@ -54,29 +59,39 @@ const postCat = async (req, res) => {
 };
 
 const deleteCat = async (req, res) => {
-  const result = await removeCat(Number(req.params.id));
+  const id = Number(req.params.id);
+  const user = res.locals.user;
+  const result = await removeCat(id, user);
   if (result) {
-    res.json({message: 'Cat removed!'});
-  } else {
-    res.status(404).json({error: 404, message: 'Not found.'});
+    return res.json({message: 'Cat removed!'});
   }
+  const cat = await findCatById(id);
+  if (cat && user.role !== 'admin' && Number(cat.owner) !== Number(user.user_id)) {
+    return res.status(403).json({message: 'You can only delete your own cats'});
+  }
+  res.status(404).json({error: 404, message: 'Not found.'});
 };
 
 const putCat = async (req, res) => {
-  // in real life, all input data (req.body) should be validated before using it
-  const result = await modifyCat(req.body, Number(req.params.id));
-  if (result) {
-    res.json({message: 'Cat updated!'});
-  } else {
-    res.status(404).json({error: 404, message: 'Not found.'});
+  const user = res.locals.user;
+  const allowedFields =
+    user.role === 'admin'
+      ? ['cat_name', 'weight', 'owner', 'filename', 'birthdate']
+      : ['cat_name', 'weight', 'filename', 'birthdate'];
+  if (!Object.keys(req.body).some((field) => allowedFields.includes(field))) {
+    return res.status(400).json({message: 'No valid cat fields provided'});
   }
+
+  const id = Number(req.params.id);
+  const result = await modifyCat(req.body, id, user);
+  if (result) {
+    return res.json({message: 'Cat updated!'});
+  }
+  const cat = await findCatById(id);
+  if (cat && user.role !== 'admin' && Number(cat.owner) !== Number(user.user_id)) {
+    return res.status(403).json({message: 'You can only update your own cats'});
+  }
+  res.status(404).json({message: 'Cat not found'});
 };
 
-export {
-  getAllCats,
-  getCatById,
-  getCatsByUserId,
-  postCat,
-  deleteCat,
-  putCat,
-};
+export {getAllCats, getCatById, getCatsByUserId, postCat, deleteCat, putCat};
