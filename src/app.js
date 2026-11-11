@@ -10,6 +10,7 @@ import requestTime from './api/middlewares/request-time.js';
 app.use(cors());
 
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 // app.use('/images', express.static('public'));
 
 // middlewaret, myös express on sellainen

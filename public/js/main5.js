@@ -1,6 +1,6 @@
 'use strict';
-const url = 'http://localhost:3000/api/v1'; // change url when uploading to server
-const imageUrl = 'http://localhost:3000/uploads/'; // change url when uploading to server
+const url = '/api/v1';
+const imageUrl = '/uploads/';
 
 // select existing html elements
 const loginWrapper = document.querySelector('#login-wrapper');
@@ -43,10 +43,13 @@ const startApp = (logged) => {
 const createCatCards = (cats) => {
   // clear ul
   ul.innerHTML = '';
+  if (!Array.isArray(cats)) {
+    throw new TypeError('Expected the cats API response to contain an array');
+  }
   cats.forEach((cat) => {
     // create li with DOM methods
     const img = document.createElement('img');
-    img.src = imageUrl + cat.filename + '_thumb';
+    img.src = imageUrl + cat.filename + '_thumb.png';
     img.alt = 'Image of a cat named ' + cat.cat_name;
     img.classList.add('resp');
 
@@ -144,7 +147,6 @@ close.addEventListener('click', (evt) => {
 // AJAX call
 
 const getCat = async () => {
-  console.log('getCat token ', sessionStorage.getItem('token'));
   try {
     const options = {
       headers: {
@@ -152,10 +154,13 @@ const getCat = async () => {
       },
     };
     const response = await fetch(url + '/cats', options);
-    const cats = await response.json();
-    createCatCards(cats);
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || `Could not load cats (${response.status})`);
+    }
+    createCatCards(result.data ?? result);
   } catch (e) {
-    console.log(e.message);
+    alert(e.message);
   }
 };
 
@@ -183,9 +188,12 @@ const getUsers = async () => {
     };
     const response = await fetch(url + '/users', options);
     const users = await response.json();
+    if (!response.ok) {
+      throw new Error(users.message || `Could not load users (${response.status})`);
+    }
     createUserOptions(users);
   } catch (e) {
-    console.log(e.message);
+    alert(e.message);
   }
 };
 
@@ -240,8 +248,8 @@ loginForm.addEventListener('submit', async (evt) => {
 
   const response = await fetch(url + '/auth/login', fetchOptions);
   const json = await response.json();
-  if (!json.user) {
-    alert(json.error.message);
+  if (!response.ok || !json.user) {
+    alert(json.message || 'Login failed. Check your username and password.');
   } else {
     // save token and user
     sessionStorage.setItem('token', json.token);
@@ -284,10 +292,10 @@ addUserForm.addEventListener('submit', async (evt) => {
     },
     body: JSON.stringify(data),
   };
-  const response = await fetch(url + '/auth/register', fetchOptions);
+  const response = await fetch(url + '/users', fetchOptions);
   const json = await response.json();
-  if (json.error) {
-    alert(json.error.message);
+  if (!response.ok) {
+    alert(json.message || `Registration failed (${response.status})`);
   } else {
     alert(json.message);
   }

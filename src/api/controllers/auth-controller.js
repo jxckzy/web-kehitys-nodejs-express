@@ -5,16 +5,19 @@ import 'dotenv/config';
 import process from 'node:process';
 
 const postLogin = async (req, res) => {
-  const user = await findUserByUsername(req.body.username);
-  if (!user) {
-    res.sendStatus(401);
-    return;
+  const {username, password} = req.body;
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({message: 'Username and password are required'});
   }
 
-  const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+  const user = await findUserByUsername(username);
+  if (!user) {
+    return res.status(401).json({message: 'Invalid username or password'});
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
-    res.sendStatus(401);
-    return;
+    return res.status(401).json({message: 'Invalid username or password'});
   }
 
   const userWithNoPassword = {
@@ -24,6 +27,10 @@ const postLogin = async (req, res) => {
     email: user.email,
     role: user.role,
   };
+
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({message: 'Authentication is not configured'});
+  }
 
   const token = jwt.sign(userWithNoPassword, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
