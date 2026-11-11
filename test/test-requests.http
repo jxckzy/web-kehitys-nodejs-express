@@ -10,6 +10,9 @@ GET {{apiUrl}}/cats/8
 ### GET cat by ID (FAIL: not found)
 GET {{apiUrl}}/cats/98
 
+### GET cats by user ID
+GET {{apiUrl}}/users/37/cats
+
 # cat_name, weight, owner, filename, birthdate
 
 ### POST new cat
@@ -39,7 +42,7 @@ Content-Disposition: form-data; name="weight"
 --MyBoundary
 Content-Disposition: form-data; name="owner"
 
-3602
+37
 --MyBoundary
 Content-Disposition: form-data; name="birthdate"
 
@@ -52,13 +55,13 @@ Content-Type: image/png
 --MyBoundary--
 
 ### PUT existing cat
-PUT {{apiUrl}}/cats/8
+PUT {{apiUrl}}/cats/48
 Content-Type: application/json
 
 {
     "weight": 6,
-    "owner": "Uusi omistaja"
+    "cat_name": "Uusi nimi"
 }
 
 ### DELETE cat by ID
-DELETE {{apiUrl}}/cats/8
+DELETE {{apiUrl}}/cats/48
