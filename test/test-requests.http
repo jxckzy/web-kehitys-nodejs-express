@@ -32,7 +32,31 @@ Content-Type: application/json
 ### POST cat with IMAGE
 POST http://127.0.0.1:3000/api/v1/cats HTTP/1.1
 Content-Type: multipart/form-data; boundary=MyBoundary
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.token}}
+
+--MyBoundary
+Content-Disposition: form-data; name="cat_name"
+
+Dogi
+--MyBoundary
+Content-Disposition: form-data; name="weight"
+
+4
+--MyBoundary
+Content-Disposition: form-data; name="birthdate"
+
+2022-10-08
+--MyBoundary
+Content-Disposition: form-data; name="image"; filename="dog.jpg"
+Content-Type: image/jpeg
+
+< ./dog.jpg
+--MyBoundary--
+
+### post cat MISSING FILE for error testing
+POST http://127.0.0.1:3000/api/v1/cats HTTP/1.1
+Content-Type: multipart/form-data; boundary=MyBoundary
+Authorization: Bearer {{login.response.body.token}}
 
 --MyBoundary
 Content-Disposition: form-data; name="cat_name"
@@ -98,3 +122,6 @@ Authorization: Bearer {{login.response.body.token}}
 ### delete cat by id
 DELETE {{apiUrl}}/cats/60
 Authorization: Bearer {{login.response.body.token}}
+
+### Olematon reitti
+GET http://localhost:3000/ei-ole-olemassa

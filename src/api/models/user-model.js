@@ -2,7 +2,7 @@ import promisepool from '../../utils/database.js';
 
 const listAllUsers = async () => {
   const [rows] = await promisepool.execute(
-    'SELECT user_id, name, username, email, role FROM wsk_users'
+    'SELECT user_id, name, username, role FROM wsk_users'
   );
   return rows;
 };

@@ -7,11 +7,10 @@ import {
   putCat,
 } from '../controllers/cat-controller.js';
 
-// Multer and sharp middleware for handling file uploads
-import multer from 'multer';
-import {createThumbnail} from '../middlewares/upload.js';
+import {createThumbnail, upload} from '../middlewares/upload.js';
 import {authenticateToken} from '../middlewares/authentication.js';
-const upload = multer({dest: 'uploads/'});
+import {body, param} from 'express-validator';
+import {validationErrors} from '../middlewares/error-handlers.js';
 
 const catRouter = express.Router();
 catRouter.use(authenticateToken);
@@ -20,14 +19,54 @@ catRouter.use(authenticateToken);
 catRouter
   .route('/')
   .get(getAllCats)
-  .post(upload.single('image'), createThumbnail, postCat);
+  .post(
+    upload.single('image'),
+    body('cat_name')
+      .trim()
+      .isLength({min: 2, max: 90})
+      .withMessage('must be between 2 and 90 characters'),
+    body('weight')
+      .isFloat({gt: 0})
+      .withMessage('must be a number greater than zero'),
+    body('birthdate')
+      .optional({values: 'falsy'})
+      .isISO8601()
+      .withMessage('must be a valid date'),
+    body('image')
+      .custom((value, {req}) => Boolean(req.file))
+      .withMessage('an image file is required'),
+    validationErrors,
+    createThumbnail,
+    postCat
+  );
 
 // Kaikki /api/v1/cats/:id reitit
 catRouter
   .route('/:id')
-  .get(getCatById)
-  .delete(deleteCat)
-  .put(putCat);
+  .get(param('id').isNumeric(), validationErrors, getCatById)
+  .delete(param('id').isNumeric(), validationErrors, deleteCat)
+  .put(
+    param('id').isNumeric().withMessage('must be a numeric cat ID'),
+    body('cat_name')
+      .optional()
+      .trim()
+      .isLength({min: 2, max: 90})
+      .withMessage('must be between 2 and 90 characters'),
+    body('weight')
+      .optional()
+      .isFloat({gt: 0})
+      .withMessage('must be a number greater than zero'),
+    body('birthdate')
+      .optional({values: 'falsy'})
+      .isISO8601()
+      .withMessage('must be a valid date'),
+    body('owner')
+      .optional()
+      .isInt({min: 1})
+      .withMessage('must be a valid user ID'),
+    validationErrors,
+    putCat
+  );
 
 export default catRouter;
 

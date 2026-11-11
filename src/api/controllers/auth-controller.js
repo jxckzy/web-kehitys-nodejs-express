@@ -3,21 +3,22 @@ import bcrypt from 'bcrypt';
 import {findUserByUsername} from '../models/user-model.js';
 import 'dotenv/config';
 import process from 'node:process';
+import {createHttpError} from '../middlewares/error-handlers.js';
 
-const postLogin = async (req, res) => {
+const postLogin = async (req, res, next) => {
   const {username, password} = req.body;
   if (typeof username !== 'string' || typeof password !== 'string') {
-    return res.status(400).json({message: 'Username and password are required'});
+    return next(createHttpError(400, 'Username and password are required'));
   }
 
   const user = await findUserByUsername(username);
   if (!user) {
-    return res.status(401).json({message: 'Invalid username or password'});
+    return next(createHttpError(401, 'Invalid username or password'));
   }
 
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
-    return res.status(401).json({message: 'Invalid username or password'});
+    return next(createHttpError(401, 'Invalid username or password'));
   }
 
   const userWithNoPassword = {
@@ -29,7 +30,7 @@ const postLogin = async (req, res) => {
   };
 
   if (!process.env.JWT_SECRET) {
-    return res.status(500).json({message: 'Authentication is not configured'});
+    return next(createHttpError(500, 'Authentication is not configured'));
   }
 
   const token = jwt.sign(userWithNoPassword, process.env.JWT_SECRET, {
@@ -38,13 +39,12 @@ const postLogin = async (req, res) => {
   res.json({user: userWithNoPassword, token});
 };
 
-const getMe = async (req, res) => {
+const getMe = async (req, res, next) => {
   console.log('getMe', res.locals.user);
   if (res.locals.user) {
-    res.json({message: 'token ok', user: res.locals.user});
-  } else {
-    res.sendStatus(401);
+    return res.json({message: 'token ok', user: res.locals.user});
   }
+  return next(createHttpError(401, 'Authentication required'));
 };
 
 export {postLogin, getMe};
