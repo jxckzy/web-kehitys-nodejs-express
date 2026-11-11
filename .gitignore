@@ -5,3 +5,5 @@ node_modules
 .env
 uploads/*
 !uploads/.gitkeep
+.env.sample
+database/create-db-user.sql
